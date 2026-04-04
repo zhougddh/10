@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ titleName }} - 管理后台</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            height: 100vh;
+            background-color: #343a40;
+            color: white;
+        }
+        .sidebar a {
+            color: #adb5bd;
+            text-decoration: none;
+            display: block;
+            padding: 10px 15px;
+        }
+        .sidebar a:hover {
+            background-color: #495057;
+            color: white;
+        }
+        .sidebar .active {
+            background-color: #007bff;
+            color: white;
+        }
+        .content {
+            padding: 20px;
+        }
+        .nav-tabs {
+            margin-bottom: 20px;
+        }
+        .tab-content {
+            background-color: white;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-top: none;
+            border-radius: 0 0 0.25rem 0.25rem;
+        }
+        .alert {
+            margin-bottom: 20px;
+        }
+        .table {
+            margin-top: 20px;
+        }
+        .logout-btn {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 侧边栏 -->
+            <div class="col-md-3 sidebar">
+                <h2 class="p-4">{{ titleName }}</h2>
+                <nav>
+                    <a href="#" class="active" data-tab="dashboard">仪表盘</a>
+                    <a href="#" data-tab="addCategory">添加分类</a>
+                    <a href="#" data-tab="editCategory">修改分类</a>
+                    <a href="#" data-tab="deleteCategory">删除分类</a>
+                    <a href="#" data-tab="addToList">添加音色</a>
+                    <a href="#" data-tab="editListItem">修改音色</a>
+                    <a href="#" data-tab="deleteFromList">删除音色</a>
+                    <a href="#" data-tab="backup">备份</a>
+                    <a href="#" data-tab="import">导入</a>
+                    <a href="#" data-tab="export">导出</a>
+                    <a href="/logout" class="logout-btn">退出登录</a>
+                </nav>
+            </div>
+            
+            <!-- 主内容区 -->
+            <div class="col-md-9 content">
+                <h1>音色管理后台</h1>
+                <p>版本: {{ PKC_VERSION }}</p>
+                <p>接口密钥: {{ PKC_MY }}</p>
+                
+                <!-- 消息提示 -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ category }}" role="alert">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- 操作结果 -->
+                {% if response %}
+                    <div class="alert alert-info" role="alert">
+                        {{ response }}
+                    </div>
+                {% endif %}
+                
+                <!-- 标签页 -->
+                <ul class="nav nav-tabs" id="myTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab" aria-controls="dashboard" aria-selected="true">仪表盘</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="addCategory-tab" data-bs-toggle="tab" data-bs-target="#addCategory" type="button" role="tab" aria-controls="addCategory" aria-selected="false">添加分类</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="editCategory-tab" data-bs-toggle="tab" data-bs-target="#editCategory" type="button" role="tab" aria-controls="editCategory" aria-selected="false">修改分类</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="deleteCategory-tab" data-bs-toggle="tab" data-bs-target="#deleteCategory" type="button" role="tab" aria-controls="deleteCategory" aria-selected="false">删除分类</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="addToList-tab" data-bs-toggle="tab" data-bs-target="#addToList" type="button" role="tab" aria-controls="addToList" aria-selected="false">添加音色</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="editListItem-tab" data-bs-toggle="tab" data-bs-target="#editListItem" type="button" role="tab" aria-controls="editListItem" aria-selected="false">修改音色</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="deleteFromList-tab" data-bs-toggle="tab" data-bs-target="#deleteFromList" type="button" role="tab" aria-controls="deleteFromList" aria-selected="false">删除音色</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="backup-tab" data-bs-toggle="tab" data-bs-target="#backup" type="button" role="tab" aria-controls="backup" aria-selected="false">备份</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="import-tab" data-bs-toggle="tab" data-bs-target="#import" type="button" role="tab" aria-controls="import" aria-selected="false">导入</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="export-tab" data-bs-toggle="tab" data-bs-target="#export" type="button" role="tab" aria-controls="export" aria-selected="false">导出</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="myTabContent">
+                    <!-- 仪表盘 -->
+                    <div class="tab-pane fade show active" id="dashboard" role="tabpanel" aria-labelledby="dashboard-tab">
+                        <h3>仪表盘</h3>
+                        <p>当前共有 {{ ysCount }} 个分类</p>
+                        
+                        {% if first_category_name %}
+                            <h4>{{ first_category_name }}</h4>
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>名称</th>
+                                        <th>描述</th>
+                                        <th>VID</th>
+                                        <th>图片</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in first_category_audio_colors %}
+                                        <tr>
+                                            <td>{{ item.name }}</td>
+                                            <td>{{ item.desc }}</td>
+                                            <td>{{ item.vid }}</td>
+                                            <td>{{ item.img }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- 添加分类 -->
+                    <div class="tab-pane fade" id="addCategory" role="tabpanel" aria-labelledby="addCategory-tab">
+                        <h3>添加分类</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="add_category">
+                            <div class="form-group">
+                                <label for="name">分类名称</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="token">Token</label>
+                                <input type="text" class="form-control" id="token" name="token">
+                            </div>
+                            <div class="form-group">
+                                <label for="sort">排序</label>
+                                <input type="number" class="form-control" id="sort" name="sort" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="desc">描述</label>
+                                <input type="text" class="form-control" id="desc" name="desc">
+                            </div>
+                            <div class="form-group">
+                                <label for="url">URL</label>
+                                <input type="text" class="form-control" id="url" name="url">
+                            </div>
+                            <div class="form-group">
+                                <label for="alias">别名</label>
+                                <input type="text" class="form-control" id="alias" name="alias">
+                            </div>
+                            <div class="form-group">
+                                <label for="type">类型</label>
+                                <input type="text" class="form-control" id="type" name="type" value="custom">
+                            </div>
+                            <button type="submit" class="btn btn-primary">添加分类</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 修改分类 -->
+                    <div class="tab-pane fade" id="editCategory" role="tabpanel" aria-labelledby="editCategory-tab">
+                        <h3>修改分类</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="edit_category">
+                            <div class="form-group">
+                                <label for="old_name">原分类名称</label>
+                                <input type="text" class="form-control" id="old_name" name="old_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new_name">新分类名称</label>
+                                <input type="text" class="form-control" id="new_name" name="new_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="token">Token</label>
+                                <input type="text" class="form-control" id="token" name="token">
+                            </div>
+                            <div class="form-group">
+                                <label for="sort">排序</label>
+                                <input type="number" class="form-control" id="sort" name="sort" value="0">
+                            </div>
+                            <div class="form-group">
+                                <label for="desc">描述</label>
+                                <input type="text" class="form-control" id="desc" name="desc">
+                            </div>
+                            <div class="form-group">
+                                <label for="url">URL</label>
+                                <input type="text" class="form-control" id="url" name="url">
+                            </div>
+                            <div class="form-group">
+                                <label for="alias">别名</label>
+                                <input type="text" class="form-control" id="alias" name="alias">
+                            </div>
+                            <div class="form-group">
+                                <label for="type">类型</label>
+                                <input type="text" class="form-control" id="type" name="type" value="custom">
+                            </div>
+                            <button type="submit" class="btn btn-primary">修改分类</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 删除分类 -->
+                    <div class="tab-pane fade" id="deleteCategory" role="tabpanel" aria-labelledby="deleteCategory-tab">
+                        <h3>删除分类</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="delete_category">
+                            <div class="form-group">
+                                <label for="name">分类名称</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <button type="submit" class="btn btn-danger">删除分类</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 添加音色 -->
+                    <div class="tab-pane fade" id="addToList" role="tabpanel" aria-labelledby="addToList-tab">
+                        <h3>添加音色</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="add_to_list">
+                            <div class="form-group">
+                                <label for="category_name">分类名称</label>
+                                <input type="text" class="form-control" id="category_name" name="category_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">音色名称</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="desc">描述</label>
+                                <input type="text" class="form-control" id="desc" name="desc">
+                            </div>
+                            <div class="form-group">
+                                <label for="vid">VID</label>
+                                <input type="text" class="form-control" id="vid" name="vid" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="img">图片</label>
+                                <input type="text" class="form-control" id="img" name="img">
+                            </div>
+                            <button type="submit" class="btn btn-primary">添加音色</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 修改音色 -->
+                    <div class="tab-pane fade" id="editListItem" role="tabpanel" aria-labelledby="editListItem-tab">
+                        <h3>修改音色</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="edit_list_item">
+                            <div class="form-group">
+                                <label for="category_name">分类名称</label>
+                                <input type="text" class="form-control" id="category_name" name="category_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="old_name">原音色名称</label>
+                                <input type="text" class="form-control" id="old_name" name="old_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="new_name">新音色名称</label>
+                                <input type="text" class="form-control" id="new_name" name="new_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="desc">描述</label>
+                                <input type="text" class="form-control" id="desc" name="desc">
+                            </div>
+                            <div class="form-group">
+                                <label for="vid">VID</label>
+                                <input type="text" class="form-control" id="vid" name="vid" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="img">图片</label>
+                                <input type="text" class="form-control" id="img" name="img">
+                            </div>
+                            <button type="submit" class="btn btn-primary">修改音色</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 删除音色 -->
+                    <div class="tab-pane fade" id="deleteFromList" role="tabpanel" aria-labelledby="deleteFromList-tab">
+                        <h3>删除音色</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="delete_from_list">
+                            <div class="form-group">
+                                <label for="category_name">分类名称</label>
+                                <input type="text" class="form-control" id="category_name" name="category_name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="name">音色名称</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <button type="submit" class="btn btn-danger">删除音色</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 备份 -->
+                    <div class="tab-pane fade" id="backup" role="tabpanel" aria-labelledby="backup-tab">
+                        <h3>备份数据</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="backup">
+                            <button type="submit" class="btn btn-primary">备份</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 导入 -->
+                    <div class="tab-pane fade" id="import" role="tabpanel" aria-labelledby="import-tab">
+                        <h3>导入数据</h3>
+                        <form method="POST" action="/dashboard" enctype="multipart/form-data">
+                            <input type="hidden" name="action" value="import">
+                            <div class="form-group">
+                                <label for="import_file">选择JSON文件</label>
+                                <input type="file" class="form-control-file" id="import_file" name="import_file" accept=".json" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">导入</button>
+                        </form>
+                    </div>
+                    
+                    <!-- 导出 -->
+                    <div class="tab-pane fade" id="export" role="tabpanel" aria-labelledby="export-tab">
+                        <h3>导出数据</h3>
+                        <form method="POST" action="/dashboard">
+                            <input type="hidden" name="action" value="export">
+                            <button type="submit" class="btn btn-primary">导出</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 初始化标签页
+        document.addEventListener('DOMContentLoaded', function() {
+            // 如果有指定的标签页，激活它
+            {% if curtabName %}
+                const tabId = '{{ curtabName }}';
+                const tabButton = document.getElementById(tabId + '-tab');
+                if (tabButton) {
+                    tabButton.click();
+                }
+            {% endif %}
+            
+            // 侧边栏导航
+            const sidebarLinks = document.querySelectorAll('.sidebar a[data-tab]');
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const tabId = this.getAttribute('data-tab');
+                    const tabButton = document.getElementById(tabId + '-tab');
+                    if (tabButton) {
+                        tabButton.click();
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
