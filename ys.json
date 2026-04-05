@@ -2,7 +2,7 @@
     "讯飞音色": {
         "token": "no",
         "sort": "5",
-        "desc": "免费使用不限次数请联系打赏破解不易：zc0-0-1-或者zllyzllz",
+        "desc": "使用不限次数请联系购买上传不易：zc0-0-1-或者上chengweidaomin有想要的音色也可以投稿mp3文件到3107321397@qq.com",
         "url": "",
         "alias": "",
         "type": "讯飞",
@@ -1618,9 +1618,9 @@
         ]
     },
     "fv": {
-        "token": "no",
+        "token": "yes",
         "sort": "4",
-        "desc": "请联系打赏破解不易：zc0-0-1-或者zllyzllz",
+        "desc": "使用不限次数请联系购买上传不易：zc0-0-1-或者chengweidaomin有想要的音色也可以投稿mp3文件到3107321397@qq.com",
         "url": "",
         "alias": "",
         "type": "FineVoice",
@@ -11134,7 +11134,7 @@
     "fish": {
         "token": "yes",
         "sort": "3",
-        "desc": "请联系打赏破解不易：zc0-0-1-或者zllyzllz",
+        "desc": "使用不限次数请联系购买上传不易：zc0-0-1-或者chengweidaomin有想要的音色也可以投稿mp3文件到3107321397@qq.com",
         "alias": "",
         "type": "fish.audio",
         "list": [
@@ -15109,7 +15109,7 @@
     "全部分类": {
         "token": "yes",
         "sort": "2",
-        "desc": "请联系打赏破解不易：zc0-0-1-或者zllyzllz",
+        "desc": "使用不限次数请联系购买上传不易：zc0-0-1-或者chengweidaomin有想要的音色也可以投稿mp3文件到3107321397@qq.com",
         "alias": "",
         "type": "fish.audio",
         "list": [
@@ -15120,8 +15120,8 @@
                 "img": ""
             },
             {
-                "name": "财神",
-                "vid": "8969872d79cb4a19a6b58a3e2d714954",
+                "name": "台湾机车妹",
+                "vid": "c4f09481bf514fd2a864977042119f07",
                 "desc": "同步于 2026-03-02 12:13",
                 "img": ""
             },
