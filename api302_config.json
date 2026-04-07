@@ -1,0 +1,12 @@
+{
+  "api_key": "sk-B4V1pwfJF1OzG8PLGEuvo6hvBNonBrb8oWRtHVIUxsRYdPVD",
+  "base_url": "https://api.302.ai",
+  "tts_endpoint": "/fish-audio/v1/tts",
+  "model": "speech-1.5",
+  "response_format": "url",
+  "format": "mp3",
+  "mp3_bitrate": 64,
+  "latency": "normal",
+  "normalize": true,
+  "chunk_length": 200
+}

@@ -1,0 +1,7 @@
+{
+  "api_key": "",
+  "base_url": "https://api.novai.su",
+  "voices_endpoint": "/voices",
+  "tts_endpoint": "/tts",
+  "upload_endpoint": "/upload"
+}

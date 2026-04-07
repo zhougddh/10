@@ -1,20 +1,4 @@
 {
-    "Fish Audio": {
-        "token": "yes",
-        "sort": "1",
-        "desc": "基于302.AI的Fish Audio语音合成",
-        "url": "",
-        "alias": "",
-        "type": "fish",
-        "list": [
-            {
-                "name": "默认音色",
-                "desc": "Fish Audio默认音色",
-                "img": "",
-                "vid": "738d0cc1a3e9430a9de2b544a466a7fc"
-            }
-        ]
-    },
     "讯飞音色": {
         "token": "no",
         "sort": "5",

@@ -1,0 +1,81 @@
+# 依赖包
+node_modules/
+pip_packages/
+
+# 临时文件
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# 音频文件
+*.mp3
+*.wav
+*.ogg
+*.flac
+
+# 压缩文件
+*.zip
+*.rar
+*.7z
+*.tar.gz
+*.tar.bz2
+
+# 日志文件
+*.log
+
+# 配置文件（可能包含敏感信息）
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE文件
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 微信相关文件
+微信/
+
+# 可执行文件
+*.exe
+*.dll
+*.so
+*.dylib
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+
+# 模型文件（可能很大）
+models/
+checkpoints/
+
+# 输出目录
+output/
+dist/
+build/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 其他
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Fish Shell 相关
+Fish_Shell.lnk
+
+# 脚本输出
+output_*.mp3
