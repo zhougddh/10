@@ -1,0 +1,7 @@
+{
+  "音色列表地址": "http://127.0.0.1:39903/ysList?my=djeibverbfvirjl1234567899",
+  "转语音地址": "http://127.0.0.1:39903/fish/tts?my=djeibverbfvirjl1234567899",
+  "签名密钥": "djeibverbfvirjl1234567899",
+  "端口": "39903",
+  "说明": "PKC音色管理后台接口配置"
+}
