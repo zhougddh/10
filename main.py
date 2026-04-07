@@ -1,11 +1,12 @@
 # -*- coding:utf-8 -*-
-from flask import Flask, render_template, request, jsonify, send_from_directory, redirect, url_for, abort, Response, session, flash
+from flask import Flask, render_template, request, jsonify, redirect, url_for, session, flash
 import json
 import os
 import shutil
-from werkzeug.utils import secure_filename
 import datetime
 import tempfile
+from novai_integration import NovaAI
+from api302_integration import API302
 
 app = Flask(__name__)
 app.secret_key = 'pkc'  # 用于会话管理
@@ -13,7 +14,14 @@ app.secret_key = 'pkc'  # 用于会话管理
 # 设置文件路径
 JSON_FILE = os.path.join(os.path.dirname(__file__), 'ys.json')
 TOKEN_USAGE_FILE = os.path.join(os.path.dirname(__file__), 'token_usage.json')
-# BG_SOUND_DIR = 'bgSound'  # 背景音文件夹
+NOVAI_CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'novai_config.json')
+API302_CONFIG_FILE = os.path.join(os.path.dirname(__file__), 'api302_config.json')
+
+# 初始化NovaAI实例
+nova_ai = NovaAI(NOVAI_CONFIG_FILE)
+
+# 初始化302.AI实例
+api302 = API302(API302_CONFIG_FILE)
 
 # 读取 JSON 文件
 def read_json_file(file):
@@ -135,117 +143,20 @@ def printYsList():
     json_data = json.dumps(read_json_file(JSON_FILE), ensure_ascii=False, indent=4)
 
     # 创建响应对象，设置内容类型为 JSON
-    return Response(json_data, mimetype='application/json; charset=utf-8')
+    return json_data
 
-# 添加分类
-def add_category(audio_colors, name, token, sort, desc, url, alias, type):
-    if name not in audio_colors:
-        audio_colors[name] = {
-            'token': token,
-            'sort': sort,
-            'desc': desc,
-            'url': url,
-            'alias': alias,
-            'type': type,
-            'list': []
-        }
-        if save_json_file(JSON_FILE, audio_colors):
-            return f"分类【{name}】 已添加。"
-        else:
-            return f"分类【{name}】 添加失败，保存文件出错。"
-    else:
-        return f"分类【{name}】 已存在。"
-
-# 修改分类
-def edit_category(audio_colors, old_name, new_name, token, sort, desc, url, alias, type):
-    if old_name in audio_colors:
-        audio_colors[new_name] = {
-            'token': token,
-            'sort': sort,
-            'desc': desc,
-            'url': url,
-            'alias': alias,
-            'type': type,
-            'list': audio_colors[old_name]['list']
-        }
-        del audio_colors[old_name]
-        if save_json_file(JSON_FILE, audio_colors):
-            return f"分类【{old_name}】 已修改为 【{new_name}】。"
-        else:
-            return f"分类【{old_name}】 修改失败，保存文件出错。"
-    else:
-        return f"分类【{old_name}】 不存在。"
-
-# 删除分类
-def delete_category(audio_colors, name):
-    if name in audio_colors:
-        del audio_colors[name]
-        if save_json_file(JSON_FILE, audio_colors):
-            return f"分类【{name}】 已删除。"
-        else:
-            return f"分类【{name}】 删除失败，保存文件出错。"
-    else:
-        return f"分类【{name}】 不存在。"
-
-# 添加音色到分类
-def add_to_list(audio_colors, category_name, name, desc, vid, img):
-    if category_name in audio_colors:
-        # 检查是否已存在同名音色
-        for item in audio_colors[category_name]['list']:
-            if item['name'] == name:
-                return f"音色【{name}】 已存在。"
-        # 添加新音色
-        audio_colors[category_name]['list'].append({
-            'name': name,
-            'desc': desc,
-            'vid': vid,
-            'img': img
-        })
-        if save_json_file(JSON_FILE, audio_colors):
-            return f"音色【{name}】 已添加到分类 【{category_name}】。"
-        else:
-            return f"音色【{name}】 添加失败，保存文件出错。"
-    else:
-        return f"分类【{category_name}】 不存在。"
-
-# 修改分类中的音色
-def edit_list_item(audio_colors, category_name, old_name, new_name, desc, vid, img):
-    if category_name in audio_colors:
-        for item in audio_colors[category_name]['list']:
-            if item['name'] == old_name:
-                item['name'] = new_name
-                item['desc'] = desc
-                item['vid'] = vid
-                item['img'] = img
-                if save_json_file(JSON_FILE, audio_colors):
-                    return f"音色【{old_name}】 已修改为 【{new_name}】。"
-                else:
-                    return f"音色【{old_name}】 修改失败，保存文件出错。"
-        return f"音色【{old_name}】 不存在。"
-    else:
-        return f"分类【{category_name}】 不存在。"
-
-# 从分类中删除音色
-def delete_from_list(audio_colors, category_name, name):
-    if category_name in audio_colors:
-        for item in audio_colors[category_name]['list']:
-            if item['name'] == name:
-                audio_colors[category_name]['list'].remove(item)
-                if save_json_file(JSON_FILE, audio_colors):
-                    return f"音色【{name}】 已删除。"
-                else:
-                    return f"音色【{name}】 删除失败，保存文件出错。"
-        return f"音色【{name}】 不存在。"
-    else:
-        return f"分类【{category_name}】 不存在。"
+# 测试路由
+@app.route('/')
+def index():
+    return 'Hello, PKC is working!'
 
 # 登录页面
-@app.route('/')
+@app.route('/login')
 def login():
     return render_template('login.html', titleName=PKC_TITLE, PKC_VERSION=PKC_VERSION)
 
 # 登录处理
-@app.route('/login', methods=['POST'])
+@app.route('/login_post', methods=['POST'])
 def login_post():
     username = request.form['username']
     password = request.form['password']
@@ -261,125 +172,12 @@ def login_post():
     return redirect(url_for('login'))
 
 # 管理后台
-@app.route('/dashboard', methods=['GET', 'POST'])
+@app.route('/dashboard')
 def dashboard():
     if 'username' not in session:
         return redirect(url_for('login'))
     
-    audio_colors = read_json_file(JSON_FILE)
-    ysCount = len(audio_colors)
-    curtabName = None
-    response = None
-    first_category_name = None
-    first_category_audio_colors = []
-    
-    # 获取第一个分类的名称和音色列表
-    if audio_colors:
-        first_category_name = next(iter(audio_colors))
-        if 'list' in audio_colors[first_category_name]:
-            first_category_audio_colors = audio_colors[first_category_name]['list']
-    
-    if request.method == 'POST':
-        action = request.form.get('action')
-        curtabName = action
-        
-        if action == 'add_category':
-            name = request.form.get('name')
-            token = request.form.get('token', '')
-            sort = request.form.get('sort', 0)
-            desc = request.form.get('desc', '')
-            url = request.form.get('url', '')
-            alias = request.form.get('alias', '')
-            type = request.form.get('type', 'custom')
-            response = add_category(audio_colors, name, token, sort, desc, url, alias, type)
-        
-        elif action == 'edit_category':
-            old_name = request.form.get('old_name')
-            new_name = request.form.get('new_name')
-            token = request.form.get('token', '')
-            sort = request.form.get('sort', 0)
-            desc = request.form.get('desc', '')
-            url = request.form.get('url', '')
-            alias = request.form.get('alias', '')
-            type = request.form.get('type', 'custom')
-            response = edit_category(audio_colors, old_name, new_name, token, sort, desc, url, alias, type)
-        
-        elif action == 'delete_category':
-            name = request.form.get('name')
-            response = delete_category(audio_colors, name)
-        
-        elif action == 'add_to_list':
-            category_name = request.form.get('category_name')
-            name = request.form.get('name')
-            desc = request.form.get('desc', '')
-            vid = request.form.get('vid')
-            img = request.form.get('img', '')
-            response = add_to_list(audio_colors, category_name, name, desc, vid, img)
-        
-        elif action == 'edit_list_item':
-            category_name = request.form.get('category_name')
-            old_name = request.form.get('old_name')
-            new_name = request.form.get('new_name')
-            desc = request.form.get('desc', '')
-            vid = request.form.get('vid')
-            img = request.form.get('img', '')
-            response = edit_list_item(audio_colors, category_name, old_name, new_name, desc, vid, img)
-        
-        elif action == 'delete_from_list':
-            category_name = request.form.get('category_name')
-            name = request.form.get('name')
-            response = delete_from_list(audio_colors, category_name, name)
-        
-        elif action == 'backup':
-            # 备份数据
-            try:
-                backup_dir = os.path.join(os.path.dirname(__file__), 'backup')
-                os.makedirs(backup_dir, exist_ok=True)
-                backup_file = os.path.join(backup_dir, f'ys_backup_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-                shutil.copy2(JSON_FILE, backup_file)
-                response = f"数据已备份到：{backup_file}"
-            except Exception as e:
-                response = f"备份失败：{str(e)}"
-        
-        elif action == 'import':
-            # 导入数据
-            if 'import_file' not in request.files:
-                response = "请选择要导入的文件"
-            else:
-                file = request.files['import_file']
-                if file.filename == '':
-                    response = "请选择要导入的文件"
-                elif file and file.filename.endswith('.json'):
-                    try:
-                        imported_data = json.load(file)
-                        if save_json_file(JSON_FILE, imported_data):
-                            response = "数据导入成功"
-                        else:
-                            response = "数据导入失败，保存文件出错"
-                    except Exception as e:
-                        response = f"导入失败：{str(e)}"
-                else:
-                    response = "请选择JSON格式的文件"
-        
-        elif action == 'export':
-            # 导出数据
-            try:
-                export_dir = os.path.join(os.path.dirname(__file__), 'export')
-                os.makedirs(export_dir, exist_ok=True)
-                export_file = os.path.join(export_dir, f'ys_export_{datetime.datetime.now().strftime("%Y%m%d_%H%M%S")}.json')
-                shutil.copy2(JSON_FILE, export_file)
-                response = f"数据已导出到：{export_file}"
-            except Exception as e:
-                response = f"导出失败：{str(e)}"
-        
-        elif action == 'clear_token_usage':
-            # 清除token使用记录
-            if save_token_usage({}):
-                response = "Token使用记录已清除"
-            else:
-                response = "清除Token使用记录失败"
-    
-    return render_template('index.html', titleName=PKC_TITLE, PKC_VERSION=PKC_VERSION, PKC_MY=PKC_MY, ysCount=ysCount, first_category_name=first_category_name, first_category_audio_colors=first_category_audio_colors, response=response, curtabName=curtabName)
+    return 'Welcome to dashboard!'
 
 # 退出登录
 @app.route('/logout')
@@ -387,6 +185,192 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+# NovaAI API 相关路由
+
+# 设置NovaAI API密钥
+@app.route('/novai/set_api_key', methods=['POST'])
+def set_novai_api_key():
+    if 'username' not in session:
+        return jsonify({'error': '未登录'}), 401
+    
+    api_key = request.form.get('api_key')
+    if not api_key:
+        return jsonify({'error': 'API密钥不能为空'}), 400
+    
+    success = nova_ai.set_api_key(api_key)
+    if success:
+        return jsonify({'success': True, 'message': 'API密钥设置成功'})
+    else:
+        return jsonify({'error': 'API密钥设置失败'}), 500
+
+# 获取NovaAI音色列表
+@app.route('/novai/voices')
+def get_novai_voices():
+    if len(PKC_MY) > 0:
+        my = request.args.get('my')
+        if my != PKC_MY:
+            return "密钥错误！"
+    
+    voices = nova_ai.get_voices()
+    return jsonify(voices)
+
+# 上传音色到NovaAI
+@app.route('/novai/upload_voice', methods=['POST'])
+def upload_novai_voice():
+    if 'username' not in session:
+        return jsonify({'error': '未登录'}), 401
+    
+    if 'audio' not in request.files:
+        return jsonify({'error': '没有上传音频文件'}), 400
+    
+    audio_file = request.files['audio']
+    voice_name = request.form.get('name', '未命名音色')
+    
+    if audio_file.filename == '':
+        return jsonify({'error': '文件名不能为空'}), 400
+    
+    # 保存上传的文件
+    temp_file = os.path.join(tempfile.gettempdir(), audio_file.filename)
+    audio_file.save(temp_file)
+    
+    # 上传到NovaAI
+    result = nova_ai.upload_voice(temp_file, voice_name)
+    
+    # 删除临时文件
+    if os.path.exists(temp_file):
+        os.remove(temp_file)
+    
+    return jsonify(result)
+
+# 使用NovaAI进行语音合成
+@app.route('/novai/tts', methods=['POST'])
+def novai_tts():
+    if len(PKC_MY) > 0:
+        my = request.args.get('my')
+        if my != PKC_MY:
+            return "密钥错误！"
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据不能为空'}), 400
+    
+    text = data.get('text')
+    voice_id = data.get('voice')
+    
+    if not text or not voice_id:
+        return jsonify({'error': '文本和音色ID不能为空'}), 400
+    
+    # 生成语音
+    output_file = os.path.join(tempfile.gettempdir(), f"novai_output_{datetime.datetime.now().timestamp()}.mp3")
+    success = nova_ai.text_to_speech(text, voice_id, output_file)
+    
+    if success and os.path.exists(output_file):
+        # 读取音频文件并返回
+        with open(output_file, 'rb') as f:
+            audio_data = f.read()
+        
+        # 删除临时文件
+        os.remove(output_file)
+        
+        # 返回音频数据
+        from flask import send_file
+        import io
+        return send_file(io.BytesIO(audio_data), mimetype='audio/mpeg')
+    else:
+        return jsonify({'error': '语音合成失败'}), 500
+
+# 302.AI API 相关路由
+
+# 设置302.AI API密钥
+@app.route('/api302/set_api_key', methods=['POST'])
+def set_api302_api_key():
+    if 'username' not in session:
+        return jsonify({'error': '未登录'}), 401
+    
+    api_key = request.form.get('api_key')
+    if not api_key:
+        return jsonify({'error': 'API密钥不能为空'}), 400
+    
+    success = api302.set_api_key(api_key)
+    if success:
+        return jsonify({'success': True, 'message': 'API密钥设置成功'})
+    else:
+        return jsonify({'error': 'API密钥设置失败'}), 500
+
+# 使用302.AI进行语音合成
+@app.route('/api302/tts', methods=['POST'])
+def api302_tts():
+    if len(PKC_MY) > 0:
+        my = request.args.get('my')
+        if my != PKC_MY:
+            return "密钥错误！"
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据不能为空'}), 400
+    
+    text = data.get('text')
+    reference_id = data.get('voice')
+    
+    if not text or not reference_id:
+        return jsonify({'error': '文本和参考音色ID不能为空'}), 400
+    
+    # 生成语音
+    output_file = os.path.join(tempfile.gettempdir(), f"api302_output_{datetime.datetime.now().timestamp()}.mp3")
+    success = api302.text_to_speech(text, reference_id, output_file)
+    
+    if success and os.path.exists(output_file):
+        # 读取音频文件并返回
+        with open(output_file, 'rb') as f:
+            audio_data = f.read()
+        
+        # 删除临时文件
+        os.remove(output_file)
+        
+        # 返回音频数据
+        from flask import send_file
+        import io
+        return send_file(io.BytesIO(audio_data), mimetype='audio/mpeg')
+    else:
+        return jsonify({'error': '语音合成失败'}), 500
+
+# Fish Audio 语音合成路由（使用302.AI）
+@app.route('/fish/tts', methods=['POST'])
+def fish_tts():
+    if len(PKC_MY) > 0:
+        my = request.args.get('my')
+        if my != PKC_MY:
+            return "密钥错误！"
+    
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': '请求数据不能为空'}), 400
+    
+    text = data.get('text')
+    reference_id = data.get('voice')
+    
+    if not text or not reference_id:
+        return jsonify({'error': '文本和参考音色ID不能为空'}), 400
+    
+    # 生成语音（使用302.AI）
+    output_file = os.path.join(tempfile.gettempdir(), f"fish_output_{datetime.datetime.now().timestamp()}.mp3")
+    success = api302.text_to_speech(text, reference_id, output_file)
+    
+    if success and os.path.exists(output_file):
+        # 读取音频文件并返回
+        with open(output_file, 'rb') as f:
+            audio_data = f.read()
+        
+        # 删除临时文件
+        os.remove(output_file)
+        
+        # 返回音频数据
+        from flask import send_file
+        import io
+        return send_file(io.BytesIO(audio_data), mimetype='audio/mpeg')
+    else:
+        return jsonify({'error': '语音合成失败'}), 500
+
 if __name__ == '__main__':
-    port = userConfig.get('端口', '39900')
-    app.run(host='0.0.0.0', port=port, debug=False)
+    port = '39903'  # 使用不同的端口以避免冲突
+    app.run(host='0.0.0.0', port=port, debug=True)
